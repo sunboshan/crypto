@@ -135,6 +135,6 @@ defmodule MD5 do
   # Binary Rotate Left
   defp brl(num, n) do
     num = num &&& 0xffffffff
-    (((0xffffffff >>> n) &&& num) <<< n) ||| (num >>> (32 - n))
+    ((num <<< n) ||| (num >>> (32 - n))) &&& 0xffffffff
   end
 end
