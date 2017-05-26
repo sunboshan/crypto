@@ -105,6 +105,7 @@ defmodule Crypto.Hash.SHA256 do
     <<binary::bits, 1::1, 0::size(n), len::64>>
   end
 
+  # logical functions
   defp ch(x, y, z), do: (x &&& y) ^^^ (~~~x &&& z)
   defp maj(x, y, z), do: (x &&& y) ^^^ (x &&& z) ^^^ (y &&& z)
   defp bsig0(x), do: brr(x, 02) ^^^ brr(x, 13) ^^^ brr(x, 22)
@@ -112,6 +113,7 @@ defmodule Crypto.Hash.SHA256 do
   defp ssig0(x), do: brr(x, 07) ^^^ brr(x, 18) ^^^ bsr(x, 03)
   defp ssig1(x), do: brr(x, 17) ^^^ brr(x, 19) ^^^ bsr(x, 10)
 
+  # constant words
   defp k(00), do: 0x428a2f98
   defp k(01), do: 0x71374491
   defp k(02), do: 0xb5c0fbcf
