@@ -1,3 +1,4 @@
-# MD5
+# Crypto
 
-Implement MD5 hash function according to [RFC 1321](https://tools.ietf.org/html/rfc1321).
+- Implement `MD5` hash function according to [RFC 1321](https://tools.ietf.org/html/rfc1321).
+- Implement `SHA1` hash function according to [RFC 3174](https://tools.ietf.org/html/rfc3174).

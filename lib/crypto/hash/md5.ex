@@ -1,4 +1,4 @@
-defmodule MD5 do
+defmodule Crypto.Hash.MD5 do
   @moduledoc """
   Implement MD5 hash function according to RFC 1321.
   """

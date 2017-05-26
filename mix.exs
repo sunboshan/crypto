@@ -1,8 +1,8 @@
-defmodule MD5.Mixfile do
+defmodule Crypto.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :md5,
+    [app: :crypto1,
      version: "0.1.0",
      elixir: "~> 1.4",
      build_embedded: Mix.env == :prod,

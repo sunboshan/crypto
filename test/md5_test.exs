@@ -1,5 +1,6 @@
 defmodule MD5Test do
   use ExUnit.Case
+  alias Crypto.Hash.MD5
   doctest MD5
 
   test "empty" do
@@ -18,6 +19,6 @@ defmodule MD5Test do
   end
 
   defp random do
-    for _ <- 0..:rand.uniform(0xffff), into: <<>>, do: <<:rand.uniform(255)>>
+    for _ <- 0..:rand.uniform(0xffff), into: <<>>, do: <<:rand.uniform(0xff)>>
   end
 end
