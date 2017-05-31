@@ -20,7 +20,7 @@ defmodule Crypto.Hash.MD5 do
       iex> MD5.hash(<<1, 2, 3>>)
       <<82, 137, 223, 115, 125, 245, 115, 38, 252, 221, 34, 89, 122, 251, 31, 172>>
   """
-  @spec hash(bitstring) :: binary
+  @spec hash(bitstring) :: <<_::128>>
   def hash(binary) do
     {a, b, c, d} = (for <<block::512 <- padding(binary)>>, do: <<block::512>>)
       |> Enum.reduce({@aa, @bb, @cc, @dd}, &do_hash(&1, &2))

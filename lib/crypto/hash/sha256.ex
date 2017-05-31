@@ -35,7 +35,7 @@ defmodule Crypto.Hash.SHA256 do
       iex> SHA256.hash(<<1, 2, 3>>)
       <<3, 144, 88, 198, 242, 192, 203, 73, 44, 83, 59, 10, 77, 20, 239, 119, 204, 15, 120, 171, 204, 206, 213, 40, 125, 132, 161, 162, 1, 28, 251, 129>>
   """
-  @spec hash(bitstring) :: binary
+  @spec hash(bitstring) :: <<_::256>>
   def hash(binary) do
     {a, b, c, d, e, f, g, h} = (for <<block::512 <- padding(binary)>>, do: <<block::512>>)
       |> Enum.reduce({@h0, @h1, @h2, @h3, @h4, @h5, @h6, @h7}, &do_hash(&1, &2))
@@ -52,7 +52,7 @@ defmodule Crypto.Hash.SHA256 do
       iex> SHA256.hash224(<<1, 2, 3>>)
       <<57, 23, 170, 170, 166, 29, 129, 222, 185, 62, 241, 194, 126, 198, 71, 241, 38, 251, 147, 40, 148, 183, 202, 169, 223, 40, 97, 147>>
   """
-  @spec hash224(bitstring) :: binary
+  @spec hash224(bitstring) :: <<_::224>>
   def hash224(binary) do
     {a, b, c, d, e, f, g, _} = (for <<block::512 <- padding(binary)>>, do: <<block::512>>)
       |> Enum.reduce({@i0, @i1, @i2, @i3, @i4, @i5, @i6, @i7}, &do_hash(&1, &2))

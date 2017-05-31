@@ -21,7 +21,7 @@ defmodule Crypto.Hash.SHA1 do
       iex> SHA1.hash(<<1, 2, 3>>)
       <<112, 55, 128, 113, 152, 194, 42, 125, 43, 8, 7, 55, 29, 118, 55, 121, 168, 79, 223, 207>>
   """
-  @spec hash(bitstring) :: binary
+  @spec hash(bitstring) :: <<_::160>>
   def hash(binary) do
     {a, b, c, d, e} = (for <<block::512 <- padding(binary)>>, do: <<block::512>>)
       |> Enum.reduce({@h0, @h1, @h2, @h3, @h4}, &do_hash(&1, &2))
