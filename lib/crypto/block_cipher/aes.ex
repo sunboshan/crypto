@@ -103,7 +103,7 @@ defmodule Crypto.BlockCipher.AES do
     Stream.unfold({key, @rc}, fn {key, [rc | t]} ->
       <<w0::32, w1::32, w2::32, w3::32>> = key
       <<a, b, c, d>> = <<w3::32>>
-      <<ss::32>> = for <<i::4, j::4 <- <<b, c, d, a>> >>, into: <<>>, do: <<elem(elem(@s, i), j)>>
+      <<ss::32>> = substitute(<<b, c, d, a>>)
       w4 = ss ^^^ w0 ^^^ rc
       w5 = w4 ^^^ w1
       w6 = w5 ^^^ w2
