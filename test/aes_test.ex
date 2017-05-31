@@ -11,6 +11,14 @@ defmodule AESTest do
     end
   end
 
+  test "decrypt random" do
+    for _ <- 1..1000 do
+      key = random()
+      rand = random()
+      assert AES.decrypt(key, AES.encrypt(key, rand)) == rand
+    end
+  end
+
   defp random do
     for _ <- 1..16, into: <<>>, do: <<:rand.uniform(0xff)>>
   end
