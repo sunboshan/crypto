@@ -50,7 +50,7 @@ defmodule Crypto.BlockCipher.DES do
   }
 
   @doc """
-  Encrypt a giving 64-bit binary with key using DES.
+  Encrypt a giving 64-bit binary with 64-bit key using DES.
 
   Example:
 
