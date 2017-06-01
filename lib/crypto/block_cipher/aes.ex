@@ -5,6 +5,8 @@ defmodule Crypto.BlockCipher.AES do
 
   import Bitwise
 
+  @type aes_key :: <<_::128>> | <<_::192>> | <<_::256>>
+
   # s-box
   @s {
     {0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76},
@@ -82,11 +84,9 @@ defmodule Crypto.BlockCipher.AES do
   }
 
   # round constant
-  @rc [0x01000000, 0x02000000, 0x04000000,
-       0x08000000, 0x10000000, 0x20000000,
-       0x40000000, 0x80000000, 0x1b000000,
-       0x36000000, 0x6c000000, 0xd8000000,
-       0xab000000, 0x4d000000, 0x9a000000]
+  @rc [0x01000000, 0x02000000, 0x04000000, 0x08000000,
+       0x10000000, 0x20000000, 0x40000000, 0x80000000,
+       0x1b000000, 0x36000000, 0x6c000000, 0xd8000000]
 
   # multiplication matrix for mix column
   @matrix <<
@@ -101,21 +101,25 @@ defmodule Crypto.BlockCipher.AES do
     0x0b, 0x0d, 0x09, 0x0e>>
 
   @doc """
-  Encrypt a giving 128-bit binary with 128-bit key using AES.
+  Encrypt a given 128-bits binary with key using AES.
 
   Example:
 
       iex> AES.encrypt("1234567887654321", "abcdefghijklmnop")
       <<50, 216, 214, 227, 0, 56, 127, 180, 132, 148, 147, 209, 233, 250, 227, 199>>
+      iex> AES.encrypt("123456788765432112345678", "abcdefghijklmnop")
+      <<231, 48, 235, 242, 134, 92, 40, 112, 88, 226, 236, 134, 165, 22, 79, 40>>
+      iex> AES.encrypt("12345678876543211234567887654321", "abcdefghijklmnop")
+      <<68, 177, 170, 209, 166, 20, 92, 106, 187, 24, 210, 250, 73, 225, 16, 15>>
   """
-  @spec encrypt(<<_::128>>, <<_::128>>) :: <<_::128>>
-  def encrypt(key, binary) when bit_size(key) == 128 and bit_size(binary) == 128 do
+  @spec encrypt(aes_key, <<_::128>>) :: <<_::128>>
+  def encrypt(key, binary) when bit_size(key) in [128, 192, 256] and bit_size(binary) == 128 do
     # initial round
     [k0 | keys] = subkeys(key)
     r0 = add_roundkey(binary, k0)
 
-    # round 1-9
-    {r9, [key]} = Enum.reduce(1..9, {r0, keys}, fn _, {bin, [key | t]} ->
+    # intermediate rounds
+    {r, [key]} = Enum.reduce(1..rounds(bit_size(key)), {r0, keys}, fn _, {bin, [key | t]} ->
       new_bin = substitute(bin)
         |> shift_row()
         |> mix_column()
@@ -124,27 +128,33 @@ defmodule Crypto.BlockCipher.AES do
     end)
 
     # final round
-    substitute(r9)
+    substitute(r)
     |> shift_row()
     |> add_roundkey(key)
   end
+  def encrypt(_, _), do: raise ArgumentError
 
   @doc """
-  Decrypt a giving 128-bit encrypted binary with 128-bit key using AES.
+  Decrypt a given 128-bits binary with key using AES.
 
   Example:
 
       iex> AES.decrypt("1234567887654321", <<50, 216, 214, 227, 0, 56, 127, 180, 132, 148, 147, 209, 233, 250, 227, 199>>)
       "abcdefghijklmnop"
+      iex> AES.decrypt("123456788765432112345678", <<231, 48, 235, 242, 134, 92, 40, 112, 88, 226, 236, 134, 165, 22, 79, 40>>)
+      "abcdefghijklmnop"
+      iex> AES.decrypt("12345678876543211234567887654321", <<68, 177, 170, 209, 166, 20, 92, 106, 187, 24, 210, 250, 73, 225, 16, 15>>)
+      "abcdefghijklmnop"
   """
-  def decrypt(key, binary) when bit_size(key) == 128 and bit_size(binary) == 128 do
+  @spec decrypt(aes_key, <<_::128>>) :: <<_::128>>
+  def decrypt(key, binary) when bit_size(key) in [128, 192, 256] and bit_size(binary) == 128 do
     # initial round
     [k0 | keys] = subkeys(key)
       |> Enum.reverse()
     r0 = add_roundkey(binary, k0)
 
-    # round 1-9
-    {r9, [key]} = Enum.reduce(1..9, {r0, keys}, fn _, {bin, [key | t]} ->
+    # intermediate rounds
+    {r, [key]} = Enum.reduce(1..rounds(bit_size(key)), {r0, keys}, fn _, {bin, [key | t]} ->
       new_bin = shift_row_1(bin)
         |> substitute_1()
         |> add_roundkey(key)
@@ -153,12 +163,18 @@ defmodule Crypto.BlockCipher.AES do
     end)
 
     # final round
-    shift_row_1(r9)
+    shift_row_1(r)
     |> substitute_1()
     |> add_roundkey(key)
   end
+  def decrypt(_, _), do: raise ArgumentError
 
-  defp subkeys(key) do
+  defp rounds(128), do: 09
+  defp rounds(192), do: 11
+  defp rounds(256), do: 13
+
+  # return 11 subkeys
+  defp subkeys(key) when bit_size(key) == 128 do
     Stream.unfold({key, @rc}, fn {key, [rc | t]} ->
       <<w0::32, w1::32, w2::32, w3::32>> = key
       <<a, b, c, d>> = <<w3::32>>
@@ -171,6 +187,49 @@ defmodule Crypto.BlockCipher.AES do
       {key, {new_key, t}}
     end)
     |> Enum.take(11)
+  end
+
+  # return 13 subkeys
+  defp subkeys(key) when bit_size(key) == 192 do
+    <<keys::unit(8)-size(208), _::bits>> = Stream.unfold({key, @rc}, fn {key, [rc | t]} ->
+        <<w0::32, w1::32, w2::32, w3::32, w4::32, w5::32>> = key
+        <<a, b, c, d>> = <<w5::32>>
+        <<ss::32>> = substitute(<<b, c, d, a>>)
+        w6 = ss ^^^ w0 ^^^ rc
+        w7 = w6 ^^^ w1
+        w8 = w7 ^^^ w2
+        w9 = w8 ^^^ w3
+        wa = w9 ^^^ w4
+        wb = wa ^^^ w5
+        new_key = <<w6::32, w7::32, w8::32, w9::32, wa::32, wb::32>>
+        {key, {new_key, t}}
+      end)
+      |> Stream.take(9)
+      |> Enum.reduce(<<>>, &(&2 <> &1))
+    for <<i::128 <- <<keys::unit(8)-size(208)>> >>, do: <<i::128>>
+  end
+
+  # return 15 subkeys
+  defp subkeys(key) when bit_size(key) == 256 do
+    <<keys::unit(8)-size(240), _::bits>> = Stream.unfold({key, @rc}, fn {key, [rc | t]} ->
+        <<w0::32, w1::32, w2::32, w3::32, w4::32, w5::32, w6::32, w7::32>> = key
+        <<a, b, c, d>> = <<w7::32>>
+        <<ss::32>> = substitute(<<b, c, d, a>>)
+        w8 = ss ^^^ w0 ^^^ rc
+        w9 = w8 ^^^ w1
+        wa = w9 ^^^ w2
+        wb = wa ^^^ w3
+        <<sb::32>> = substitute(<<wb::32>>)
+        wc = sb ^^^ w4
+        wd = wc ^^^ w5
+        we = wd ^^^ w6
+        wf = we ^^^ w7
+        new_key = <<w8::32, w9::32, wa::32, wb::32, wc::32, wd::32, we::32, wf::32>>
+        {key, {new_key, t}}
+      end)
+      |> Stream.take(8)
+      |> Enum.reduce(<<>>, &(&2 <> &1))
+    for <<i::128 <- <<keys::unit(8)-size(240)>> >>, do: <<i::128>>
   end
 
   defp add_roundkey(bin, key) do
