@@ -78,8 +78,8 @@ defmodule Crypto.BlockCipher.DES do
   def decrypt(_, _), do: raise ArgumentError
 
   @spec do_encrypt(:enc | :dec, <<_::64>>, <<_::64>>) :: <<_::64>>
-  defp do_encrypt(tag, key, binary) do
-    subkeys = case tag do
+  defp do_encrypt(mode, key, binary) do
+    subkeys = case mode do
       :enc -> subkeys(key)
       :dec -> Enum.reverse(subkeys(key))
     end
