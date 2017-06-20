@@ -3,6 +3,13 @@ defmodule CipherTest do
   alias Crypto.BlockCipher.Cipher
   doctest Cipher
 
+  test "padding" do
+    for _ <- 1..100 do
+      rand = random(:rand.uniform(200))
+      assert Cipher.unpadding(Cipher.padding(rand, 16)) == rand
+    end
+  end
+
   test "wrong key size" do
     assert_raise ArgumentError, fn ->
       Cipher.encrypt(:aes_ecb, "wrong_key_size", "1234567890abcdef")
@@ -126,6 +133,15 @@ defmodule CipherTest do
       iv = random(16)
       rand = random(:rand.uniform(100))
       assert Cipher.decrypt(:aes_ofb, key, iv, Cipher.encrypt(:aes_ofb, key, iv, rand)) == rand
+    end
+  end
+
+  test "decrypt random in aes_ctr mode" do
+    for _ <- 1..100 do
+      key = random(Enum.random([16, 24, 32]))
+      iv = random(16)
+      rand = random(:rand.uniform(100))
+      assert Cipher.decrypt(:aes_ctr, key, iv, Cipher.encrypt(:aes_ctr, key, iv, rand)) == rand
     end
   end
 
