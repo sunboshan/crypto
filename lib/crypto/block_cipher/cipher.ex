@@ -74,10 +74,7 @@ defmodule Crypto.BlockCipher.Cipher do
   Padding scheme defined in PKCS#7.
   """
   def padding(block, size) do
-    n = case rem(byte_size(block), size) do
-      0 -> size
-      n -> size - n
-    end
+    n = size - rem(byte_size(block), size)
     padding = for _ <- 1..n, into: <<>>, do: <<n>>
     <<block::binary, padding::binary>>
   end
